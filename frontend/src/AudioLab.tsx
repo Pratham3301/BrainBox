@@ -51,7 +51,7 @@ export default function AudioLab() {
     setWaveform([]);
     
     try {
-      const response = await fetch(API_BASE_URL + '/api/experiment/audio", {
+      const response = await fetch(API_BASE_URL + '/api/experiment/audio', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
