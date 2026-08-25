@@ -80,7 +80,7 @@ export default function VisionLab({ layers }: VisionLabProps) {
     }, 600);
 
     try {
-      const response = await fetch(API_BASE_URL + `/api/experiment/visualize/${selectedLayer}/${selectedNeuron}`);
+      const response = await fetch(API_BASE_URL + `/api/experiment/visualize/${selectedLayer}/${selectedNeuron}`, { method: "POST" });
       const data = await response.json();
       if (data.image_b64) setHallucinationImage(`data:image/png;base64,${data.image_b64}`);
     } catch (e) { console.error(e); }

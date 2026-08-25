@@ -35,6 +35,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def health_check():
+    return {"status": "running", "message": "Neural Archaeology API is active"}
+
 ablation_lock = threading.Lock()
 
 # ── Generate synthetic test images for Vision mode ──
@@ -140,60 +144,62 @@ def get_imagenet_classes():
         return {}
 
 def get_vision_state():
-    if VisionState.model is None:
-        print("=" * 50)
-        print("  INITIALIZING RESNET-18 VISION BACKEND")
-        print("=" * 50)
-        VisionState.model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
-        VisionState.model.eval()
+    with ablation_lock:
+        if VisionState.model is None:
+            print("=" * 50)
+            print("  INITIALIZING RESNET-18 VISION BACKEND")
+            print("=" * 50)
+            VisionState.model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+            VisionState.model.eval()
         
-        VisionState.engine = InstrumentationEngine(VisionState.model)
-        VisionState.ablation_engine = AblationExperiment(VisionState.model, VisionState.engine)
-        VisionState.visualizer = FeatureVisualizer(VisionState.model)
-        VisionState.imagenet_classes = get_imagenet_classes()
+            VisionState.engine = InstrumentationEngine(VisionState.model)
+            VisionState.ablation_engine = AblationExperiment(VisionState.model, VisionState.engine)
+            VisionState.visualizer = FeatureVisualizer(VisionState.model)
+            VisionState.imagenet_classes = get_imagenet_classes()
         
-        preprocess = transforms.Compose([
-            transforms.Resize(256),
-            transforms.CenterCrop(224),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-        ])
+            preprocess = transforms.Compose([
+                transforms.Resize(256),
+                transforms.CenterCrop(224),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            ])
         
-        tensors = []
-        VisionState.sample_images_b64 = []
-        VisionState.sample_image_names = []
+            tensors = []
+            VisionState.sample_images_b64 = []
+            VisionState.sample_image_names = []
         
-        for name, color, pattern in TEST_IMAGES:
-            img = make_test_image(name, color, pattern)
-            tensors.append(preprocess(img))
-            VisionState.sample_image_names.append(name)
-            buf = io.BytesIO()
-            img.resize((200, 200)).save(buf, format="PNG")
-            VisionState.sample_images_b64.append(base64.b64encode(buf.getvalue()).decode("utf-8"))
+            for name, color, pattern in TEST_IMAGES:
+                img = make_test_image(name, color, pattern)
+                tensors.append(preprocess(img))
+                VisionState.sample_image_names.append(name)
+                buf = io.BytesIO()
+                img.resize((200, 200)).save(buf, format="PNG")
+                VisionState.sample_images_b64.append(base64.b64encode(buf.getvalue()).decode("utf-8"))
             
-        tensor_batch = torch.stack(tensors)
+            tensor_batch = torch.stack(tensors)
         
-        with torch.no_grad():
-            preds = VisionState.model(tensor_batch)
-            pseudo_labels = torch.argmax(preds, dim=1)
+            with torch.no_grad():
+                preds = VisionState.model(tensor_batch)
+                pseudo_labels = torch.argmax(preds, dim=1)
             
-        from torch.utils.data import DataLoader, TensorDataset
-        dataset = TensorDataset(tensor_batch, pseudo_labels)
-        VisionState.test_loader = DataLoader(dataset, batch_size=len(tensors))
-        print("Vision Backend Ready.")
+            from torch.utils.data import DataLoader, TensorDataset
+            dataset = TensorDataset(tensor_batch, pseudo_labels)
+            VisionState.test_loader = DataLoader(dataset, batch_size=len(tensors))
+            print("Vision Backend Ready.")
     return VisionState
 
 def get_language_state():
-    if LanguageState.model is None:
-        print("=" * 50)
-        print("  INITIALIZING GPT-2 TRANSFORMER LANGUAGE BACKEND")
-        print("=" * 50)
-        from transformers import GPT2LMHeadModel, GPT2Tokenizer
-        LanguageState.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-        LanguageState.model = GPT2LMHeadModel.from_pretrained("gpt2")
-        LanguageState.model.eval()
-        LanguageState.engine = TransformerEngine(LanguageState.model)
-        print("GPT-2 Language Backend Ready.")
+    with ablation_lock:
+        if LanguageState.model is None:
+            print("=" * 50)
+            print("  INITIALIZING GPT-2 TRANSFORMER LANGUAGE BACKEND")
+            print("=" * 50)
+            from transformers import GPT2LMHeadModel, GPT2Tokenizer
+            LanguageState.tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+            LanguageState.model = GPT2LMHeadModel.from_pretrained("gpt2")
+            LanguageState.model.eval()
+            LanguageState.engine = TransformerEngine(LanguageState.model)
+            print("GPT-2 Language Backend Ready.")
     return LanguageState
 
 # ── API Models ──
@@ -243,7 +249,7 @@ def get_top_predictions(logits, state, k=3):
 
 # ── Vision Endpoints ──
 
-@app.get("/api/model/layers")
+@app.post("/api/model/layers")
 def get_layers():
     return {
         "model": "ResNet-18 (Pre-trained on ImageNet)",
@@ -329,7 +335,7 @@ def run_ablation(request: AblationRequest):
         "top_evidence": top_evidence,
     }
 
-@app.get("/api/experiment/visualize/{layer_name}/{component_idx}")
+@app.post("/api/experiment/visualize/{layer_name}/{component_idx}")
 def run_visualization(layer_name: str, component_idx: int):
     state = get_vision_state()
     with ablation_lock:
@@ -396,7 +402,7 @@ def run_inception(request: InceptionRequest):
 
 # ── Language (GPT-2 Transformer) Endpoints ──
 
-@app.get("/api/transformer/info")
+@app.post("/api/transformer/info")
 def get_transformer_info():
     return {
         "model": "GPT-2 Small (124M Parameters)",
@@ -529,7 +535,7 @@ def run_transformer_chat(req: TransformerChatRequest):
 
 # ── Representation Similarity & Probing Endpoints ──
 
-@app.get("/api/experiment/similarity")
+@app.post("/api/experiment/similarity")
 def get_layer_similarity():
     state = get_vision_state()
     images, _ = next(iter(state.test_loader))
@@ -563,7 +569,7 @@ def get_layer_similarity():
         "matrix": matrix
     }
 
-@app.get("/api/experiment/probe")
+@app.post("/api/experiment/probe")
 def run_layer_probing():
     state = get_vision_state()
     images, _ = next(iter(state.test_loader))
@@ -983,26 +989,27 @@ def scan_circuit(req: CircuitScanRequest):
 
 # ── AUDIO / SPEECH GENERATION (SpeechT5) ──
 def get_audio_model():
-    if AudioState.model is None:
-        print("Loading SpeechT5 audio model...")
-        AudioState.device = "cuda" if torch.cuda.is_available() else "cpu"
-        processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
-        model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(AudioState.device)
-        vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(AudioState.device)
+    with ablation_lock:
+        if AudioState.model is None:
+            print("Loading SpeechT5 audio model...")
+            AudioState.device = "cpu"
+            processor = SpeechT5Processor.from_pretrained("microsoft/speecht5_tts")
+            model = SpeechT5ForTextToSpeech.from_pretrained("microsoft/speecht5_tts").to(AudioState.device)
+            vocoder = SpeechT5HifiGan.from_pretrained("microsoft/speecht5_hifigan").to(AudioState.device)
         
-        # Load a default speaker embedding
-        try:
-            embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation", trust_remote_code=True)
-            speaker_embeddings = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0).to(AudioState.device)
-        except Exception as e:
-            print(f"Failed to load speaker embeddings from dataset, using fallback. Error: {e}")
-            speaker_embeddings = torch.randn(1, 512).to(AudioState.device) # Fallback if dataset download fails
+            # Load a default speaker embedding
+            try:
+                embeddings_dataset = load_dataset("Matthijs/cmu-arctic-xvectors", split="validation", trust_remote_code=True)
+                speaker_embeddings = torch.tensor(embeddings_dataset[7306]["xvector"]).unsqueeze(0).to(AudioState.device)
+            except Exception as e:
+                print(f"Failed to load speaker embeddings from dataset, using fallback. Error: {e}")
+                speaker_embeddings = torch.randn(1, 512).to(AudioState.device) # Fallback if dataset download fails
             
-        AudioState.model = model
-        AudioState.processor = processor
-        AudioState.vocoder = vocoder
-        AudioState.speaker_embeddings = speaker_embeddings
-        AudioState.engine = InstrumentationEngine(model)
+            AudioState.model = model
+            AudioState.processor = processor
+            AudioState.vocoder = vocoder
+            AudioState.speaker_embeddings = speaker_embeddings
+            AudioState.engine = InstrumentationEngine(model)
         
     return AudioState
 

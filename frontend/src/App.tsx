@@ -49,7 +49,7 @@ function App() {
   // Pre-fetch layers for vision lab
   const [layers, setLayers] = useState<any[]>([])
   useEffect(() => {
-    fetch(API_BASE_URL + '/api/model/layers')
+    fetch(API_BASE_URL + '/api/model/layers', { method: "POST" })
       .then(res => res.json())
       .then(data => setLayers(data.layers))
       .catch(err => console.error(err))
