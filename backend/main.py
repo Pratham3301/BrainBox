@@ -149,7 +149,14 @@ def get_vision_state():
             print("=" * 50)
             print("  INITIALIZING RESNET-18 VISION BACKEND")
             print("=" * 50)
-            VisionState.model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+            try:
+                VisionState.model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+            except Exception as exc:
+                # A Space can be cold-started without outbound model downloads.
+                # Keep the labs usable with the same ResNet architecture instead
+                # of failing every vision and similarity request.
+                print(f"Could not download ResNet-18 weights; using local initialization: {exc}")
+                VisionState.model = models.resnet18(weights=None)
             VisionState.model.eval()
         
             VisionState.engine = InstrumentationEngine(VisionState.model)
@@ -342,7 +349,9 @@ def run_visualization(layer_name: str, component_idx: int):
         img_b64 = state.visualizer.generate_synthetic_image(
             layer_name=layer_name,
             channel_idx=component_idx,
-            steps=150,
+            # CPU Spaces can time out on the original 150-step ascent.
+            # A shorter optimization still produces a useful feature image.
+            steps=24,
             lr=0.05,
             device=state.device
         )

@@ -44,8 +44,10 @@ class FeatureVisualizer:
         
         handle = target_layer.register_forward_hook(grad_hook)
         
-        # ResNet expects 224x224
-        image_tensor = torch.randn((1, 3, 224, 224), device=device) * 0.01
+        # ResNet accepts smaller spatial inputs.  Starting at 96px makes the
+        # interactive feature-visualization endpoint finish on CPU Spaces;
+        # the result is enlarged for display below.
+        image_tensor = torch.randn((1, 3, 96, 96), device=device) * 0.01
         image_tensor = image_tensor.requires_grad_(True)
         
         optimizer = optim.Adam([image_tensor], lr=lr, weight_decay=1e-6)
