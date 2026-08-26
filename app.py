@@ -3,7 +3,6 @@ import sys
 
 import gradio as gr
 import spaces
-from starlette.routing import Mount
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from backend.main import app as fastapi_app
@@ -26,11 +25,28 @@ with gr.Blocks() as demo:
 original_init = gr.routes.App.__init__
 
 
+class BackendDispatchMiddleware:
+    """Pass the backend prefix to FastAPI before Gradio routes the request."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        path = scope.get("path", "")
+        if scope["type"] in {"http", "websocket"} and (
+            path == "/backend" or path.startswith("/backend/")
+        ):
+            backend_scope = dict(scope)
+            backend_scope["path"] = path[len("/backend"):] or "/"
+            backend_scope["root_path"] = f"{scope.get('root_path', '')}/backend"
+            await fastapi_app(backend_scope, receive, send)
+            return
+        await self.app(scope, receive, send)
+
+
 def custom_init(self, *args, **kwargs):
     original_init(self, *args, **kwargs)
-    # Gradio has a catch-all route.  The backend mount must be first so the
-    # catch-all cannot claim `/backend/api/*` before FastAPI sees it.
-    self.router.routes.insert(0, Mount("/backend", app=fastapi_app))
+    self.add_middleware(BackendDispatchMiddleware)
 
 
 gr.routes.App.__init__ = custom_init
