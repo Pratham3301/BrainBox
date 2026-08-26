@@ -9,44 +9,22 @@ from backend.main import app as fastapi_app
 
 
 @spaces.GPU
-def reserve_zero_gpu():
-    return "ZeroGPU ready"
+def fake_gpu():
+    pass
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# BrainBox backend")
-    status = gr.Textbox(label="Status", interactive=False)
-    gr.Button("Reserve ZeroGPU").click(reserve_zero_gpu, outputs=status)
+    gr.Markdown("BrainBox Backend is Running natively inside Gradio!")
+    btn = gr.Button("ZeroGPU Keepalive")
+    btn.click(fn=fake_gpu, inputs=[], outputs=[])
 
 
-# Gradio reserves `/api/*` for its own prediction endpoints.  Mounting the
-# FastAPI service at `/backend` prevents that collision: frontend routes are
-# served as `/backend/api/...`.
 original_init = gr.routes.App.__init__
-
-
-class BackendDispatchMiddleware:
-    """Pass the backend prefix to FastAPI before Gradio routes the request."""
-
-    def __init__(self, app):
-        self.app = app
-
-    async def __call__(self, scope, receive, send):
-        path = scope.get("path", "")
-        if scope["type"] in {"http", "websocket"} and (
-            path == "/backend" or path.startswith("/backend/")
-        ):
-            backend_scope = dict(scope)
-            backend_scope["path"] = path[len("/backend"):] or "/"
-            backend_scope["root_path"] = f"{scope.get('root_path', '')}/backend"
-            await fastapi_app(backend_scope, receive, send)
-            return
-        await self.app(scope, receive, send)
 
 
 def custom_init(self, *args, **kwargs):
     original_init(self, *args, **kwargs)
-    self.add_middleware(BackendDispatchMiddleware)
+    self.mount("/api", fastapi_app)
 
 
 gr.routes.App.__init__ = custom_init
