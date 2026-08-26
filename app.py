@@ -3,6 +3,7 @@ import sys
 
 import gradio as gr
 import spaces
+from starlette.routing import Mount
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from backend.main import app as fastapi_app
@@ -27,7 +28,9 @@ original_init = gr.routes.App.__init__
 
 def custom_init(self, *args, **kwargs):
     original_init(self, *args, **kwargs)
-    self.mount("/backend", fastapi_app)
+    # Gradio has a catch-all route.  The backend mount must be first so the
+    # catch-all cannot claim `/backend/api/*` before FastAPI sees it.
+    self.router.routes.insert(0, Mount("/backend", app=fastapi_app))
 
 
 gr.routes.App.__init__ = custom_init
