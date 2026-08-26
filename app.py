@@ -3,6 +3,7 @@ import sys
 
 import gradio as gr
 import spaces
+from fastapi.middleware.cors import CORSMiddleware
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 from backend.main import app as fastapi_app
@@ -26,7 +27,21 @@ original_init = gr.routes.App.__init__
 
 def custom_init(self, *args, **kwargs):
     original_init(self, *args, **kwargs)
-    self.mount("/api", fastapi_app)
+    # Gradio owns a generic `/api/{api_name}` route.  A mounted FastAPI app at
+    # `/api` becomes `/api/api/...` and is intercepted before it can run. Put
+    # the exact backend API routes ahead of Gradio's generic route instead.
+    backend_routes = [
+        route for route in fastapi_app.router.routes
+        if route.path.startswith("/api/")
+    ]
+    self.router.routes[0:0] = backend_routes
+    self.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 gr.routes.App.__init__ = custom_init
