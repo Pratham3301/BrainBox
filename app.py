@@ -9,21 +9,28 @@ from backend.main import app as fastapi_app
 
 
 @spaces.GPU
-def reserve_gpu():
-    """Optional manual ZeroGPU reservation for the Space control surface."""
-    return "GPU reservation is ready. API requests continue on the Space CPU."
+def fake_gpu():
+    pass
 
 
 with gr.Blocks() as demo:
-    gr.Markdown("# BrainBox Backend\nThe FastAPI service is ready at `/api/*`.")
-    status = gr.Textbox(label="Space status", interactive=False)
-    gr.Button("Reserve ZeroGPU").click(reserve_gpu, outputs=status)
+    gr.Markdown("BrainBox Backend is Running natively inside Gradio!")
+    btn = gr.Button("ZeroGPU Keepalive")
+    btn.click(fn=fake_gpu, inputs=[], outputs=[])
 
-# Mount Gradio using its public API.  This preserves the existing FastAPI routes
-# instead of monkey-patching Gradio's internal router.
-app = gr.mount_gradio_app(fastapi_app, demo, path="/ui")
+
+# This follows the deployment shape already used by the ZeroGPU Space. The
+# FastAPI app owns the API routes; Gradio supplies the Space process/UI shell.
+original_init = gr.routes.App.__init__
+
+
+def custom_init(self, *args, **kwargs):
+    original_init(self, *args, **kwargs)
+    self.mount("/api", fastapi_app)
+
+
+gr.routes.App.__init__ = custom_init
+
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", "7860")))
+    demo.launch(server_name="0.0.0.0", server_port=7860)
