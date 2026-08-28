@@ -39,7 +39,9 @@ app.add_middleware(
 def health_check():
     return {"status": "running", "message": "Neural Archaeology API is active"}
 
-ablation_lock = threading.Lock()
+# Audio generation calls the model loader while already holding this lock.
+# RLock prevents that legitimate nested acquisition from deadlocking requests.
+ablation_lock = threading.RLock()
 
 # ── Generate synthetic test images for Vision mode ──
 def make_test_image(label, color, pattern="solid"):
@@ -1067,6 +1069,11 @@ def generate_audio(req: AudioRequest):
         # Downsample waveform for visualization
         chunk_size = max(1, len(speech_np) // 200)
         waveform_data = [float(np.mean(np.abs(speech_np[i:i+chunk_size]))) for i in range(0, len(speech_np), chunk_size)]
+
+        # Release per-request tensors before the next generation on memory-limited hosts.
+        del inputs, speech, speech_np
+        if AudioState.device == "cuda":
+            torch.cuda.empty_cache()
         
         return {
             "audio_b64": audio_b64,
