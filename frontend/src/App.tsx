@@ -10,6 +10,7 @@ import SimilarityLab from './SimilarityLab'
 import AudioLab from './AudioLab'
 import DiscoveryLab from './DiscoveryLab'
 import DocumentationLab from './DocumentationLab'
+import logo from './assets/logo.png'
 import { Home, Brain, Eye, MessageSquareWarning, Network, Bot, ShieldAlert, Headphones, Search, BookOpen } from 'lucide-react'
 
 type View = 'landing' | 'vision' | 'language' | 'similarity' | 'chatbot' | 'safety' | 'audio' | 'discovery' | 'docs'
@@ -30,6 +31,15 @@ function App() {
     document.body.classList.toggle('dark-mode', darkMode);
     localStorage.setItem('brainbox-dark', String(darkMode));
   }, [darkMode]);
+
+  useEffect(() => {
+    document.title = 'BrainBox';
+    const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]') ?? document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/png';
+    favicon.href = logo;
+    if (!favicon.parentNode) document.head.appendChild(favicon);
+  }, []);
 
   useEffect(() => {
     window.location.hash = activeTab;
@@ -83,7 +93,7 @@ function App() {
         }}>
           {/* Brand Logo */}
           <div className="hover-3d" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#000', color: 'var(--accent-yellow)', padding: '6px 14px', border: '3px solid var(--accent-yellow)', transform: 'rotate(-2deg)', cursor: 'pointer', zIndex: 100, boxShadow: '4px 4px 0px var(--accent-red)' }} onClick={() => setActiveTab('landing')}>
-            <Brain className="animate-float" size={24} style={{ display: 'inline-block' }} />
+            <img src={logo} alt="BrainBox" width={24} height={24} style={{ display: 'inline-block', objectFit: 'contain' }} />
             <span style={{ fontWeight: '900', fontSize: '1.2rem', letterSpacing: '2px', textTransform: 'uppercase' }}>BrainBox</span>
           </div>
 
