@@ -371,7 +371,7 @@ export default function LandingPage({ onNavigate }: LandingPageProps) {
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#000', display: 'inline-block' }} />
                   SYSTEM ONLINE
                 </span>
-                <span style={{ opacity: 0.7, fontSize: '0.75rem', fontWeight: 'bold', fontFamily: 'monospace' }}>
+                <span style={{ color: 'var(--accent-yellow)', textShadow: '1px 1px 0 #000', fontSize: '0.75rem', fontWeight: 'bold', fontFamily: 'monospace' }}>
                   v2.0 — MIT Research
                 </span>
               </div>
