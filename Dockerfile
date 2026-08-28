@@ -19,9 +19,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 RUN pip install -e .
 
-# Hugging Face Spaces standard port is 7860
-ENV PORT=7860
-EXPOSE 7860
+# Oracle's public HTTP listener is configured through the PORT environment
+# variable. Keep 8000 as the container default for local and OCI deployment.
+ENV PORT=8000
+EXPOSE 8000
 
 # Start Uvicorn
 CMD ["sh", "-c", "uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

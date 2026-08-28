@@ -1,0 +1,10 @@
+.git
+.pytest_cache
+.venv
+__pycache__
+**/__pycache__
+frontend
+tests
+docs
+sample_data
+hf_upload.py

@@ -1,0 +1,9 @@
+services:
+  api:
+    build: .
+    container_name: brainbox-api
+    restart: unless-stopped
+    ports:
+      - "80:8000"
+    environment:
+      PORT: "8000"
