@@ -11,7 +11,7 @@ import AudioLab from './AudioLab'
 import DiscoveryLab from './DiscoveryLab'
 import DocumentationLab from './DocumentationLab'
 import logo from './assets/logo.png'
-import { Home, Brain, Eye, MessageSquareWarning, Network, Bot, ShieldAlert, Headphones, Search, BookOpen } from 'lucide-react'
+import { Home, Eye, MessageSquareWarning, Network, Bot, ShieldAlert, Headphones, Search, BookOpen } from 'lucide-react'
 
 type View = 'landing' | 'vision' | 'language' | 'similarity' | 'chatbot' | 'safety' | 'audio' | 'discovery' | 'docs'
 
