@@ -25,7 +25,7 @@ from neural_archaeology.analysis.visualization import FeatureVisualizer
 from neural_archaeology.instrumentation.hooks import InstrumentationEngine
 from neural_archaeology.instrumentation.transformer_engine import TransformerEngine
 
-app = FastAPI(title="Neural Archaeology API - Dual Mode (Vision & Language)")
+app = FastAPI(debug=True)
 
 app.add_middleware(
     CORSMiddleware,
