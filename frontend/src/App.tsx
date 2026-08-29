@@ -49,7 +49,10 @@ function App() {
     script.async = true;
     script.onload = () => (window as any).turnstile.render('#turnstile-widget', {
       sitekey: TURNSTILE_SITE_KEY,
-      callback: (token: string) => { turnstileToken.current = token; setTurnstileVerified(true); },
+      callback: (token: string) => {
+        turnstileToken.current = token;
+        window.setTimeout(() => setTurnstileVerified(true), 1500);
+      },
       'expired-callback': () => { turnstileToken.current = ''; setTurnstileVerified(false); },
     });
     document.head.appendChild(script);
