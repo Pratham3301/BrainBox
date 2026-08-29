@@ -52,7 +52,7 @@ function App() {
       sitekey: TURNSTILE_SITE_KEY,
       callback: (token: string) => {
         turnstileToken.current = token;
-        setTurnstileVerified(true);
+        window.setTimeout(() => setTurnstileVerified(true), 1500);
       },
       'expired-callback': () => { turnstileToken.current = ''; setTurnstileVerified(false); },
     }));
@@ -65,7 +65,6 @@ function App() {
       if (turnstileToken.current) headers.set('X-Turnstile-Token', turnstileToken.current);
       return originalFetch(input, { ...init, headers }).then(response => {
         turnstileToken.current = '';
-        setTurnstileVerified(false);
         if (turnstileWidgetId.current !== null) {
           (window as any).turnstile.reset(turnstileWidgetId.current);
         }
