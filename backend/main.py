@@ -13,6 +13,7 @@ import torch.nn.functional as F
 from datasets import load_dataset
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from PIL import Image, ImageDraw
 from pydantic import BaseModel
 from torchvision import models, transforms
@@ -48,14 +49,17 @@ TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverif
 
 @app.middleware("http")
 async def require_turnstile(request: Request, call_next):
-    if not request.url.path.startswith("/api/") or request.method == "OPTIONS":
+    # Lightweight discovery is safe to call before the widget completes.
+    if (not request.url.path.startswith("/api/")
+            or request.url.path == "/api/model/layers"
+            or request.method == "OPTIONS"):
         return await call_next(request)
     secret = os.getenv("TURNSTILE_SECRET_KEY")
     token = request.headers.get("X-Turnstile-Token")
     if not secret:
-        raise HTTPException(status_code=503, detail="Bot protection is not configured")
+        return JSONResponse(status_code=503, content={"detail": "Bot protection is not configured"})
     if not token:
-        raise HTTPException(status_code=403, detail="Missing bot verification token")
+        return JSONResponse(status_code=403, content={"detail": "Missing bot verification token"})
     payload = urllib.parse.urlencode({"secret": secret, "response": token}).encode()
     try:
         with urllib.request.urlopen(urllib.request.Request(TURNSTILE_VERIFY_URL, data=payload), timeout=5) as response:
@@ -63,7 +67,7 @@ async def require_turnstile(request: Request, call_next):
     except Exception:
         verified = False
     if not verified:
-        raise HTTPException(status_code=403, detail="Bot verification failed")
+        return JSONResponse(status_code=403, content={"detail": "Bot verification failed"})
     return await call_next(request)
 
 # Audio generation calls the model loader while already holding this lock.
