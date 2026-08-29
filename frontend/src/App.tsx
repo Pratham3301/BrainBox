@@ -19,6 +19,7 @@ type View = 'landing' | 'vision' | 'language' | 'similarity' | 'chatbot' | 'safe
 
 function App() {
   const turnstileToken = useRef('');
+  const turnstileWidgetId = useRef<number | null>(null);
   const [turnstileVerified, setTurnstileVerified] = useState(false);
   const [activeTab, setActiveTab] = useState<View>(() => {
     const hash = window.location.hash.replace('#', '') as View;
@@ -47,14 +48,14 @@ function App() {
     const script = document.createElement('script');
     script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async = true;
-    script.onload = () => (window as any).turnstile.render('#turnstile-widget', {
+    script.onload = () => (turnstileWidgetId.current = (window as any).turnstile.render('#turnstile-widget', {
       sitekey: TURNSTILE_SITE_KEY,
       callback: (token: string) => {
         turnstileToken.current = token;
-        window.setTimeout(() => setTurnstileVerified(true), 1500);
+        setTurnstileVerified(true);
       },
       'expired-callback': () => { turnstileToken.current = ''; setTurnstileVerified(false); },
-    });
+    }));
     document.head.appendChild(script);
     const originalFetch = window.fetch;
     window.fetch = (input, init = {}) => {
@@ -62,7 +63,14 @@ function App() {
       if (!url.startsWith(API_BASE_URL)) return originalFetch(input, init);
       const headers = new Headers(init.headers);
       if (turnstileToken.current) headers.set('X-Turnstile-Token', turnstileToken.current);
-      return originalFetch(input, { ...init, headers });
+      return originalFetch(input, { ...init, headers }).then(response => {
+        turnstileToken.current = '';
+        setTurnstileVerified(false);
+        if (turnstileWidgetId.current !== null) {
+          (window as any).turnstile.reset(turnstileWidgetId.current);
+        }
+        return response;
+      });
     };
     return () => { window.fetch = originalFetch; script.remove(); };
   }, []);
