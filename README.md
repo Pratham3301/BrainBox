@@ -1,96 +1,165 @@
----
-title: BrainBox Backend
-emoji: 🧠
-colorFrom: blue
-colorTo: purple
-sdk: gradio
-sdk_version: 5.13.0
-app_file: app.py
-pinned: false
----
+<div align="center">
 
-# BrainBox: Interactive Neural Network Experimentation Laboratory
+# 🧠 BrainBox
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20BrainBox-7C3AED?style=for-the-badge)](https://brainbox-neura.vercel.app)
+### Interactive Neural Network Experimentation Laboratory
+
+**Most AI tools let you *use* models. BrainBox lets you *understand* them.**
+
+Disable a layer. Steer an activation. Trace a circuit. Watch the model change in real time — not in theory, in your browser.
+
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-brainbox--neura.vercel.app-7C3AED?style=for-the-badge)](https://brainbox-neura.vercel.app)
 [![Backend Status](https://img.shields.io/badge/Backend-Online-22C55E?style=for-the-badge)](https://brainbox-neura.duckdns.org)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](#local-development)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#models--tooling)
-[![PyTorch](https://img.shields.io/badge/PyTorch-Powered-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](#models--tooling)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-> **Most AI tools let us use models. BrainBox lets us understand them.**
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white)](#-local-development)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](#️-models--tooling)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](#️-models--tooling)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Powered-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](#️-models--tooling)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](#️-system-architecture)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](#️-deployment-guide)
 
-## Table of Contents
+</div>
 
-- [Interactive Labs](#interactive-labs)
-- [System Architecture](#system-architecture)
-- [Models & Tooling](#models--tooling)
-- [Security & Production Hardening](#security--production-hardening)
-- [API Reference](#api-reference)
-- [Local Development](#local-development)
-- [Deployment Guide](#deployment-guide)
-- [License](#license)
+<br>
 
-BrainBox is an interactive neural-network experimentation laboratory that turns AI from a black box into something users can inspect and intervene on.
+<p align="center">
+  <img src="https://raw.githubusercontent.com/Pratham3301/BrainBox/main/frontend/src/assets/Website%20Image.png" alt="BrainBox interface preview" width="850"/>
+</p>
 
-## Purpose
+<br>
 
-Traditional AI learning focuses on prompts, outputs, and accuracy. BrainBox lets learners disable layers, inspect representations, steer activations, and observe causal changes directly. It uses established, lightweight models—ResNet-18, GPT-2, and SpeechT5—so experiments remain understandable, repeatable, and affordable on CPU hardware.
+## 📚 Table of Contents
 
-## Interactive Labs
+- [Why BrainBox](#-why-brainbox)
+- [Interactive Labs](#-interactive-labs)
+- [System Architecture](#️-system-architecture)
+- [Models & Tooling](#️-models--tooling)
+- [Security & Production Hardening](#-security--production-hardening)
+- [API Reference](#-api-reference)
+- [Local Development](#-local-development)
+- [Deployment Guide](#️-deployment-guide)
+- [Reliability Notes](#️-reliability-notes)
+- [Project Structure](#-project-structure)
+- [License](#-license)
 
-| Lab | Capabilities |
-|---|---|
-| 👁️ Vision Lab | ResNet-18 mechanistic layer ablation, activation inspection, and feature visualization. |
-| 🗣️ Language Lab | GPT-2 124M transformer-block ablation and output/logit behavior tracking. |
-| 🎧 Audio & Speech Lab | SpeechT5 six-layer decoder intervention, CMU Arctic embeddings, phonetic degradation, and 16 kHz WAV output. |
-| 🔎 Auto-Circuit Discovery | Causal tracing across up to 144 GPT-2 attention heads with Top-10 critical-node ranking. |
-| 📊 Similarity & Probing | Linear CKA and linear probing for representation analysis. |
-| 🛡️ Safety & Steering | Representation engineering with activation steering vectors. |
-| 🤖 Guided AI Co-Pilot | Context-aware help for architecture and experiment concepts. |
-| 🔗 State Capture | Reproducible experiment snapshots and shareable URLs. |
+<br>
 
-## System Architecture
+## 🎯 Why BrainBox
 
-```text
-React 19 + TypeScript + Vite + Turnstile
-                 │ HTTPS / JSON
-                 ▼
-Oracle Cloud Nginx Reverse Proxy (TLS)
-                 │ localhost:8000
-                 ▼
-Docker: FastAPI + Uvicorn
-Turnstile validation · CORS · RLock hook isolation
-                 │
-                 ▼
-ResNet-18 · GPT-2 · SpeechT5
-PyTorch hooks · CKA · probing · steering · circuit tracing
+Most people's first encounter with a neural network is through a text box: type a prompt, get an output, repeat. Everything in between stays a black box — you never see a layer switch off, a representation collapse, or an attention head decide what a sentence is about.
+
+**BrainBox removes the black box.** Ablate a ResNet block and see which class predictions collapse. Steer a GPT-2 activation along a concept vector and watch the generated text bend toward it. Trace which of 144 attention heads a circuit actually routes through.
+
+It deliberately runs on small, well-understood models — **ResNet-18**, **GPT-2 (124M)**, and **SpeechT5** — instead of frontier-scale ones, so every experiment stays interpretable, reproducible, and cheap enough to run on plain CPU hardware.
+
+<br>
+
+## 🧪 Interactive Labs
+
+<table>
+<tr>
+<td width="60" align="center">👁️</td>
+<td width="180"><b>Vision Lab</b></td>
+<td>Mechanistic layer ablation on ResNet-18 with activation inspection and feature visualization.</td>
+</tr>
+<tr>
+<td align="center">🗣️</td>
+<td><b>Language Lab</b></td>
+<td>GPT-2 transformer-block ablation with live output/logit behavior tracking.</td>
+</tr>
+<tr>
+<td align="center">🎧</td>
+<td><b>Audio & Speech Lab</b></td>
+<td>SpeechT5 six-layer decoder intervention, CMU Arctic speaker embeddings, phonetic degradation, 16 kHz WAV output.</td>
+</tr>
+<tr>
+<td align="center">🔎</td>
+<td><b>Auto-Circuit Discovery</b></td>
+<td>Causal tracing across up to 144 GPT-2 attention heads with Top-10 critical-node ranking.</td>
+</tr>
+<tr>
+<td align="center">📊</td>
+<td><b>Similarity & Probing</b></td>
+<td>Linear CKA and linear probing for representation analysis.</td>
+</tr>
+<tr>
+<td align="center">🛡️</td>
+<td><b>Safety & Steering</b></td>
+<td>Representation engineering via activation steering vectors.</td>
+</tr>
+<tr>
+<td align="center">🤖</td>
+<td><b>Guided AI Co-Pilot</b></td>
+<td>Context-aware help for architecture and experiment concepts.</td>
+</tr>
+<tr>
+<td align="center">🔗</td>
+<td><b>State Capture</b></td>
+<td>Reproducible experiment snapshots and shareable URLs.</td>
+</tr>
+</table>
+
+<br>
+
+## 🏗️ System Architecture
+
+```mermaid
+flowchart TD
+    A["React 19 + TypeScript + Vite<br/>Framer Motion · Cloudflare Turnstile"] -->|HTTPS / JSON| B["Oracle Cloud<br/>Nginx Reverse Proxy · TLS"]
+    B -->|localhost:8000| C["Docker Container<br/>FastAPI + Uvicorn"]
+    C --> D["Turnstile Validation · CORS · RLock Hook Isolation"]
+    D --> E["ResNet-18"]
+    D --> F["GPT-2"]
+    D --> G["SpeechT5"]
+    E & F & G --> H["PyTorch Hooks · CKA · Probing · Steering · Circuit Tracing"]
+
+    style A fill:#61DAFB,color:#000
+    style B fill:#F80000,color:#fff
+    style C fill:#009688,color:#fff
+    style H fill:#EE4C2C,color:#fff
 ```
 
-The API is implemented in `backend/main.py`; reusable analysis code is in `src/neural_archaeology/`; the frontend is in `frontend/`.
+| Layer | Location |
+|---|---|
+| REST API | [`backend/main.py`](backend/main.py) |
+| Interpretability core | [`src/neural_archaeology/`](src/neural_archaeology/) |
+| UI / Labs | [`frontend/`](frontend/) |
 
-## Models & Tooling
+<br>
+
+## ⚙️ Models & Tooling
 
 | Layer | Technologies | Purpose |
 |---|---|---|
-| Frontend | React 19, TypeScript, Vite, Framer Motion | Interactive laboratory UI |
-| Backend | FastAPI, Uvicorn | REST experiment API |
-| Deep Learning | PyTorch, TorchVision, Transformers | Hook-based model manipulation |
-| Audio | SoundFile, SciPy, NumPy | In-memory 16 kHz WAV synthesis |
-| Analysis | scikit-learn, pandas, Plotly | CKA, probing, causal analysis |
-| Security | Cloudflare Turnstile | Bot verification for protected requests |
-| Infrastructure | Docker, Nginx, Oracle Cloud | HTTPS container deployment |
+| **Frontend** | React 19, TypeScript, Vite, Framer Motion | Interactive laboratory UI |
+| **Backend** | FastAPI, Uvicorn | REST experiment API |
+| **Deep Learning** | PyTorch, TorchVision, Transformers | Hook-based model manipulation |
+| **Audio** | SoundFile, SciPy, NumPy | In-memory 16 kHz WAV synthesis |
+| **Analysis** | scikit-learn, pandas, Plotly | CKA, probing, causal analysis |
+| **Security** | Cloudflare Turnstile | Bot verification for protected requests |
+| **Infrastructure** | Docker, Nginx, Oracle Cloud | HTTPS container deployment |
 
-Models include ResNet-18, GPT-2, `microsoft/speecht5_tts`, `microsoft/speecht5_hifigan`, and CMU Arctic speaker embeddings.
+**Models in use:** ResNet-18 · GPT-2 · `microsoft/speecht5_tts` · `microsoft/speecht5_hifigan` · CMU Arctic speaker embeddings
 
-## Security & Production Hardening
+<br>
 
-- Cloudflare Turnstile verifies protected browser requests; tokens are single-use and refreshed after each protected call.
-- CORS allows the Vercel production site and local development origin only.
-- `threading.RLock` serializes PyTorch hook experiments and avoids conflicting interventions.
-- Lazy model loading and persistent in-memory caching reduce repeat-load cost.
-- Rate limiting and payload limits are recommended before high-volume public use.
+## 🔒 Security & Production Hardening
 
-## API Reference
+- 🛡️ **Cloudflare Turnstile** verifies protected browser requests; tokens are single-use and refreshed after every call.
+- 🌐 **CORS** is locked to the production Vercel origin and local dev only.
+- 🔐 **`threading.RLock`** serializes PyTorch hook experiments to prevent conflicting interventions.
+- ⚡ **Lazy model loading** with persistent in-memory caching to cut repeat-load cost.
+- 📈 Rate limiting and payload limits are recommended before high-volume public use.
+
+<br>
+
+## 📡 API Reference
+
+<details>
+<summary><b>Click to expand the full route table</b></summary>
+
+<br>
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -102,32 +171,90 @@ Models include ResNet-18, GPT-2, `microsoft/speecht5_tts`, `microsoft/speecht5_h
 | `POST` | `/api/experiment/similarity` | Linear CKA comparison |
 | `POST` | `/api/safety/steer` | Activation steering |
 
-Additional routes support probing, feature visualization, activation maximization, chat, attention-head scans, and batch steering.
+Additional routes cover probing, feature visualization, activation maximization, chat, attention-head scans, and batch steering — see [`backend/main.py`](backend/main.py) for the complete, current list.
 
-## Local Development
+</details>
 
-Clone: `git clone https://github.com/Pratham3301/BrainBox.git && cd BrainBox`
+<br>
 
-Backend: `python -m venv .venv`, activate it, run `pip install -r requirements.txt`, then run `uvicorn backend.main:app --host 0.0.0.0 --port 8000`.
+## 🚀 Local Development
 
-Frontend: run `cd frontend`, `npm install`, and `npm run dev`. Configure the API with `frontend/src/config.ts` or `VITE_API_BASE_URL`.
+```bash
+# Clone
+git clone https://github.com/Pratham3301/BrainBox.git
+cd BrainBox
 
-## Deployment Guide
+# Backend
+python -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn backend.main:app --host 0.0.0.0 --port 8000
 
-Frontend: `https://brainbox-neura.vercel.app`. API: `https://brainbox-neura.duckdns.org`. CORS is restricted to the production frontend and localhost. Cloudflare Turnstile uses a public frontend site key and a private `TURNSTILE_SECRET_KEY` stored only in Oracle’s `.env`; never commit the secret.
+# Frontend (new terminal)
+cd frontend
+npm install
+npm run dev
+```
 
-The Oracle container listens on port 8000 while Nginx owns ports 80/443 and provides TLS. Required private `.env` values are `TURNSTILE_SECRET_KEY` and `PORT=8000`. Deploy with `git pull origin main`, then `sudo docker compose -f docker-compose.oracle.yml up -d --build`, then `sudo systemctl restart nginx`.
+Configure the API base URL via `frontend/src/config.ts` or the `VITE_API_BASE_URL` environment variable.
 
-## Reliability
+<br>
 
-Models load lazily and remain cached. Audio inference is CPU-intensive. A shared re-entrant lock serializes experiments and prevents conflicting hooks. Public high-volume deployments should add rate limiting, payload limits, monitoring, and stronger authentication.
+## ☁️ Deployment Guide
 
-## Project Structure
+| Component | Value |
+|---|---|
+| Frontend | [`brainbox-neura.vercel.app`](https://brainbox-neura.vercel.app) |
+| API | [`brainbox-neura.duckdns.org`](https://brainbox-neura.duckdns.org) |
+| CORS scope | Production frontend + localhost only |
+| Turnstile | Public site key (frontend) · private `TURNSTILE_SECRET_KEY` (backend `.env` only — never commit) |
 
-`backend/main.py` contains FastAPI routes; `src/neural_archaeology/` contains instrumentation and analysis modules; `frontend/src/` contains the React labs; `Dockerfile` and `docker-compose.oracle.yml` define Oracle deployment.
+Oracle's container listens on port `8000`; Nginx owns `80`/`443` and terminates TLS.
 
-## License
+```bash
+# Required .env values on the Oracle host
+TURNSTILE_SECRET_KEY=your_secret_here
+PORT=8000
 
-Licensed under the MIT License. See [LICENSE](LICENSE).
+# Deploy
+git pull origin main
+sudo docker compose -f docker-compose.oracle.yml up -d --build
+sudo systemctl restart nginx
+```
 
-Built with ❤️ for AI Interpretability & Mechanistic Understanding.
+<br>
+
+## 🛠️ Reliability Notes
+
+Models load lazily and stay cached across requests. Audio inference is CPU-intensive, so a shared re-entrant lock (`RLock`) serializes experiments and prevents conflicting hook state. Before high-volume public deployment, add rate limiting, payload size limits, monitoring, and stronger authentication.
+
+<br>
+
+## 📂 Project Structure
+
+```text
+BrainBox/
+├── backend/
+│   └── main.py                  # FastAPI routes
+├── src/
+│   └── neural_archaeology/      # Instrumentation & analysis modules
+├── frontend/
+│   └── src/                     # React labs (Vision, Language, Audio, Circuits...)
+├── Dockerfile
+├── docker-compose.oracle.yml
+└── LICENSE
+```
+
+<br>
+
+## 📜 License
+
+Licensed under the [MIT License](LICENSE).
+
+<br>
+
+<div align="center">
+
+**Built with ❤️ for AI Interpretability & Mechanistic Understanding**
+
+</div>
