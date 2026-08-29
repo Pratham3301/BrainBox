@@ -3,13 +3,15 @@ import io
 import json
 import os
 import threading
+import urllib.parse
+import urllib.request
 
 import numpy as np
 import soundfile as sf
 import torch
 import torch.nn.functional as F
 from datasets import load_dataset
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image, ImageDraw
 from pydantic import BaseModel
@@ -41,6 +43,28 @@ app.add_middleware(
 @app.get("/")
 def health_check():
     return {"status": "running", "message": "Neural Archaeology API is active"}
+
+TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+
+@app.middleware("http")
+async def require_turnstile(request: Request, call_next):
+    if not request.url.path.startswith("/api/") or request.method == "OPTIONS":
+        return await call_next(request)
+    secret = os.getenv("TURNSTILE_SECRET_KEY")
+    token = request.headers.get("X-Turnstile-Token")
+    if not secret:
+        raise HTTPException(status_code=503, detail="Bot protection is not configured")
+    if not token:
+        raise HTTPException(status_code=403, detail="Missing bot verification token")
+    payload = urllib.parse.urlencode({"secret": secret, "response": token}).encode()
+    try:
+        with urllib.request.urlopen(urllib.request.Request(TURNSTILE_VERIFY_URL, data=payload), timeout=5) as response:
+            verified = json.loads(response.read()).get("success", False)
+    except Exception:
+        verified = False
+    if not verified:
+        raise HTTPException(status_code=403, detail="Bot verification failed")
+    return await call_next(request)
 
 # Audio generation calls the model loader while already holding this lock.
 # RLock prevents that legitimate nested acquisition from deadlocking requests.

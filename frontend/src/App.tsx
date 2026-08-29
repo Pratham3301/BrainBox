@@ -1,5 +1,5 @@
-import { API_BASE_URL } from "./config";
-import { useState, useEffect } from 'react'
+import { API_BASE_URL, TURNSTILE_SITE_KEY } from "./config";
+import { useState, useEffect, useRef } from 'react'
 import { Moon, Sun } from 'lucide-react'
 import LandingPage from './LandingPage'
 import VisionLab from './VisionLab'
@@ -18,6 +18,7 @@ type View = 'landing' | 'vision' | 'language' | 'similarity' | 'chatbot' | 'safe
 
 
 function App() {
+  const turnstileToken = useRef('');
   const [activeTab, setActiveTab] = useState<View>(() => {
     const hash = window.location.hash.replace('#', '') as View;
     return ['landing', 'vision', 'language', 'similarity', 'chatbot', 'safety', 'audio', 'discovery', 'docs'].includes(hash) ? hash : 'landing';
@@ -39,6 +40,27 @@ function App() {
     favicon.type = 'image/png';
     favicon.href = logo;
     if (!favicon.parentNode) document.head.appendChild(favicon);
+  }, []);
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.onload = () => (window as any).turnstile.render('#turnstile-widget', {
+      sitekey: TURNSTILE_SITE_KEY,
+      callback: (token: string) => { turnstileToken.current = token; },
+      'expired-callback': () => { turnstileToken.current = ''; },
+    });
+    document.head.appendChild(script);
+    const originalFetch = window.fetch;
+    window.fetch = (input, init = {}) => {
+      const url = typeof input === 'string' ? input : input.toString();
+      if (!url.startsWith(API_BASE_URL)) return originalFetch(input, init);
+      const headers = new Headers(init.headers);
+      if (turnstileToken.current) headers.set('X-Turnstile-Token', turnstileToken.current);
+      return originalFetch(input, { ...init, headers });
+    };
+    return () => { window.fetch = originalFetch; script.remove(); };
   }, []);
 
   useEffect(() => {
@@ -67,6 +89,7 @@ function App() {
 
   return (
     <div style={{ overflowX: 'hidden', minHeight: '100vh', position: 'relative' }}>
+      <div id="turnstile-widget" style={{ position: 'fixed', bottom: '76px', right: '20px', zIndex: 9999 }} />
       {/* Dark Mode Toggle - Sarcastic */}
       <button
         onClick={() => setDarkMode(!darkMode)}
