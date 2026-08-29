@@ -9,7 +9,26 @@ app_file: app.py
 pinned: false
 ---
 
-# BrainBox
+# BrainBox: Interactive Neural Network Experimentation Laboratory
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Open%20BrainBox-7C3AED?style=for-the-badge)](https://brainbox-neura.vercel.app)
+[![Backend Status](https://img.shields.io/badge/Backend-Online-22C55E?style=for-the-badge)](https://brainbox-neura.duckdns.org)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](#local-development)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#models--tooling)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Powered-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](#models--tooling)
+
+> **Most AI tools let us use models. BrainBox lets us understand them.**
+
+## Table of Contents
+
+- [Interactive Labs](#interactive-labs)
+- [System Architecture](#system-architecture)
+- [Models & Tooling](#models--tooling)
+- [Security & Production Hardening](#security--production-hardening)
+- [API Reference](#api-reference)
+- [Local Development](#local-development)
+- [Deployment Guide](#deployment-guide)
+- [License](#license)
 
 BrainBox is an interactive neural-network experimentation laboratory that turns AI from a black box into something users can inspect and intervene on.
 
