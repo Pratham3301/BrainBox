@@ -101,7 +101,12 @@ function App() {
 
   return (
     <div style={{ overflowX: 'hidden', minHeight: '100vh', position: 'relative' }}>
-      {!turnstileVerified && <div id="turnstile-widget" style={{ position: 'fixed', bottom: '76px', right: '20px', zIndex: 9999 }} />}
+      <div id="turnstile-widget" style={{
+        position: 'fixed', bottom: '76px', right: '20px', zIndex: 9999,
+        visibility: turnstileVerified ? 'hidden' : 'visible',
+        opacity: turnstileVerified ? 0 : 1,
+        transition: 'opacity 150ms ease'
+      }} />
       {/* Dark Mode Toggle - Sarcastic */}
       <button
         onClick={() => setDarkMode(!darkMode)}
