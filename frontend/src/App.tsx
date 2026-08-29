@@ -19,6 +19,7 @@ type View = 'landing' | 'vision' | 'language' | 'similarity' | 'chatbot' | 'safe
 
 function App() {
   const turnstileToken = useRef('');
+  const [turnstileVerified, setTurnstileVerified] = useState(false);
   const [activeTab, setActiveTab] = useState<View>(() => {
     const hash = window.location.hash.replace('#', '') as View;
     return ['landing', 'vision', 'language', 'similarity', 'chatbot', 'safety', 'audio', 'discovery', 'docs'].includes(hash) ? hash : 'landing';
@@ -48,8 +49,8 @@ function App() {
     script.async = true;
     script.onload = () => (window as any).turnstile.render('#turnstile-widget', {
       sitekey: TURNSTILE_SITE_KEY,
-      callback: (token: string) => { turnstileToken.current = token; },
-      'expired-callback': () => { turnstileToken.current = ''; },
+      callback: (token: string) => { turnstileToken.current = token; setTurnstileVerified(true); },
+      'expired-callback': () => { turnstileToken.current = ''; setTurnstileVerified(false); },
     });
     document.head.appendChild(script);
     const originalFetch = window.fetch;
@@ -89,7 +90,7 @@ function App() {
 
   return (
     <div style={{ overflowX: 'hidden', minHeight: '100vh', position: 'relative' }}>
-      <div id="turnstile-widget" style={{ position: 'fixed', bottom: '76px', right: '20px', zIndex: 9999 }} />
+      {!turnstileVerified && <div id="turnstile-widget" style={{ position: 'fixed', bottom: '76px', right: '20px', zIndex: 9999 }} />}
       {/* Dark Mode Toggle - Sarcastic */}
       <button
         onClick={() => setDarkMode(!darkMode)}
