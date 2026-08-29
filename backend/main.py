@@ -650,6 +650,14 @@ def run_layer_probing():
             
     return {"probe_results": results}
 
+@app.post("/api/experiment/similarity-scan")
+def run_similarity_scan():
+    """Run both Similarity Lab analyses under one verified request."""
+    return {
+        "similarity": get_layer_similarity(),
+        "probing": run_layer_probing(),
+    }
+
 @app.post("/api/experiment/discover_circuit")
 def discover_circuit(req: CircuitDiscoveryRequest):
     state = get_language_state()

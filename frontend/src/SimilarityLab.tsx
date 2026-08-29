@@ -21,12 +21,11 @@ export default function SimilarityLab() {
     }, 150);
 
     try {
-        const [simRes, probeRes] = await Promise.all([
-          fetch(API_BASE_URL + '/api/experiment/similarity', { method: "POST" }),
-          fetch(API_BASE_URL + '/api/experiment/probe', { method: "POST" })
-        ]);
-      setSimilarityData(await simRes.json());
-      setProbingData(await probeRes.json());
+        const response = await fetch(API_BASE_URL + '/api/experiment/similarity-scan', { method: "POST" });
+        if (!response.ok) throw new Error(`Similarity scan failed (${response.status})`);
+        const data = await response.json();
+        setSimilarityData(data.similarity);
+        setProbingData(data.probing);
     } catch (e) { console.error(e); }
     
     clearInterval(interval);
