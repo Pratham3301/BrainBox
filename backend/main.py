@@ -56,10 +56,12 @@ async def require_turnstile(request: Request, call_next):
         return await call_next(request)
     secret = os.getenv("TURNSTILE_SECRET_KEY")
     token = request.headers.get("X-Turnstile-Token")
+    origin = request.headers.get("origin")
+    cors_headers = {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"} if origin else {}
     if not secret:
-        return JSONResponse(status_code=503, content={"detail": "Bot protection is not configured"})
+        return JSONResponse(status_code=503, content={"detail": "Bot protection is not configured"}, headers=cors_headers)
     if not token:
-        return JSONResponse(status_code=403, content={"detail": "Missing bot verification token"})
+        return JSONResponse(status_code=403, content={"detail": "Missing bot verification token"}, headers=cors_headers)
     payload = urllib.parse.urlencode({"secret": secret, "response": token}).encode()
     try:
         with urllib.request.urlopen(urllib.request.Request(TURNSTILE_VERIFY_URL, data=payload), timeout=5) as response:
@@ -67,7 +69,7 @@ async def require_turnstile(request: Request, call_next):
     except Exception:
         verified = False
     if not verified:
-        return JSONResponse(status_code=403, content={"detail": "Bot verification failed"})
+        return JSONResponse(status_code=403, content={"detail": "Bot verification failed"}, headers=cors_headers)
     return await call_next(request)
 
 # Audio generation calls the model loader while already holding this lock.
